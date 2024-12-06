@@ -1,4 +1,36 @@
+version: '3.8'
+
 services:
+  catalog-service:
+    image: soekopaacykel/catalogservice:latest
+    container_name: catalogservice
+    environment:
+      - ImagePath=/srv/images
+    ports:
+      - "5001:8080"
+    networks:
+      - auctionGOnet
+    volumes:
+      - catalog-images:/srv/images
+
+  auth-service:
+    image: cbjoedstrup/authservice-image
+    container_name: authservice
+    environment:
+      - UserServiceEndpoint=http://userservice:8080
+    ports:
+      - "5002:8080"
+    networks:
+      - auctionGOnet
+
+  user-service:
+    image: cbjoedstrup/userservice-image
+    container_name: userservice
+    ports:
+      - "5003:8080"
+    networks:
+      - auctionGOnet
+
   vault_dev:
     image: hashicorp/vault:latest
     container_name: vault_dev
@@ -48,10 +80,13 @@ services:
       - ./vault-init/vault_init.sh:/app/vault_init.sh
     networks:
       - auctionGOnet  
-  
+
 volumes:
+  catalog-images:
+    external: false
   vault_data:
 
 networks:
   auctionGOnet:
     driver: bridge
+    name: auctionGOnet
