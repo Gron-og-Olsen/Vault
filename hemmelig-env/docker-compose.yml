@@ -39,7 +39,6 @@ services:
       timeout: 10s    # Timeout på 10 sekunder per healthcheck
     command: /bin/sh -c "sleep 5 && dotnet authservice.dll"
 
-
   user-service:
     image: cbjoedstrup/userservice-image
     container_name: userservice
@@ -97,6 +96,39 @@ services:
       - ./vault-init/vault_init.sh:/app/vault_init.sh
     networks:
       - auctionGOnet  
+
+  bidworker:
+    image: soekopaacykel/bidworker:latest  # Udskift med din faktiske Docker image
+    container_name: bidworker
+    environment:
+      - RabbitHost=rabbitmq  # Miljøvariabel for RabbitMQ
+    depends_on:
+      - rabbitmq
+    networks:
+      - auctionGOnet
+    healthcheck:
+      test: ["CMD", "true"]  # En simpel kommando, der altid returnerer succes
+      interval: 30s  # Udfør healthcheck hver 30 sekunder
+      retries: 5      # Prøv op til 5 gange
+      start_period: 10s  # Vent 10 sekunder før første healthcheck
+      timeout: 10s    # Timeout på 10 sekunder per healthcheck
+    command: /bin/sh -c "sleep 15 && dotnet bidworker.dll"  # Erstat med den kommando, der starter din applikation
+    restart: on-failure
+   
+    
+
+  rabbitmq:
+    image: "rabbitmq:management"
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"  # RabbitMQ AMQP port
+      - "15672:15672"  # RabbitMQ Management UI port
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
+    networks:
+      - auctionGOnet
+    restart: always
 
 volumes:
   catalog-images:
