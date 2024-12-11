@@ -118,7 +118,7 @@ services:
       - auctionGOnet  
 
   bidworker:
-    image: soekopaacykel/bidworker:latest  # Udskift med din faktiske Docker image
+    image: soekopaacykel/bidworker:latest 
     container_name: bidworker
     environment:
       - RabbitHost=rabbitmq  # Miljøvariabel for RabbitMQ
