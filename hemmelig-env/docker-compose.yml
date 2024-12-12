@@ -69,4 +69,4 @@ volumes:
 
 networks:
   auctionGOnet:
-    external: false
+    external: true
