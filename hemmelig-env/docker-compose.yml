@@ -63,10 +63,12 @@ services:
     networks:
       - auctionGOnet
     restart: always
+  
+  
 
 volumes:
   vault_data:
 
 networks:
   auctionGOnet:
-    external: true
+    external: false
