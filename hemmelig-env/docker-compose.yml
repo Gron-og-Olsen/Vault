@@ -70,8 +70,8 @@ services:
     ports:
       - "27017:27017" # MongoDB default port
     environment:
-      MONGO_INITDB_ROOT_USERNAME: DBKongerne
-      MONGO_INITDB_ROOT_PASSWORD: Password
+      - MONGO_INITDB_ROOT_USERNAME=Admin
+      - MONGO_INITDB_ROOT_PASSWORD=Password
     volumes:
       - mongo_data:/data/db
     networks:
