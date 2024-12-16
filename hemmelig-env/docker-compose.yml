@@ -72,8 +72,6 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=Admin
       - MONGO_INITDB_ROOT_PASSWORD=Password
-    volumes:
-      - mongo_data:/data/db
     networks:
       - auctionGOnet
 
