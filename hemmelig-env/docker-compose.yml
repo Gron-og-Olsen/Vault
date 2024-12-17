@@ -1,72 +1,6 @@
 version: '3.8'
 
 services:
-  catalog-service:
-    image: soekopaacykel/catalogservice:latest
-    container_name: catalogservice
-    environment:
-      - ImagePath=/srv/images
-      - AUTHSERVICE_URL=http://authservice:8080
-    ports:
-      - "5001:8080"
-    networks:
-      - auctionGOnet
-    volumes:
-      - catalog-images:/srv/images
-    healthcheck:
-      test: ["CMD", "true"]  # En simpel kommando, der altid returnerer succes
-      interval: 30s  # Udfør healthcheck hver 30 sekunder
-      retries: 5      # Prøv op til 5 gange
-      start_period: 10s  # Vent 10 sekunder før første healthcheck
-      timeout: 10s    # Timeout på 10 sekunder per healthcheck
-    command: /bin/sh -c "sleep 15 && dotnet catalogservice.dll"  # Erstat med den kommando, der starter din applikation
-    restart: on-failure
-
-  auth-service:
-    image: cbjoedstrup/authservice-image
-    container_name: authservice
-    environment:
-      - UserServiceEndpoint=http://userservice:8080
-    ports:
-      - "5002:8080"
-    networks:
-      - auctionGOnet
-    healthcheck:
-      test: ["CMD", "true"]  # En simpel kommando, der altid returnerer succes
-      interval: 30s  # Udfør healthcheck hver 30 sekunder
-      retries: 5      # Prøv op til 5 gange
-      start_period: 10s  # Vent 10 sekunder før første healthcheck
-      timeout: 10s    # Timeout på 10 sekunder per healthcheck
-    command: /bin/sh -c "sleep 5 && dotnet authservice.dll"
-
-  user-service:
-    image: cbjoedstrup/userservice-image
-    container_name: userservice
-    ports:
-      - "5003:8080"
-    networks:
-      - auctionGOnet
-
-  auction-service:
-    image: cbjoedstrup/auctionservice-image
-    container_name: auctionservice
-    ports:
-      - "5004:8080"
-    environment:
-      - RabbitHost=rabbitmq  # Miljøvariabel for RabbitMQ
-    depends_on:
-      - rabbitmq
-    networks:
-      - auctionGOnet
-    healthcheck:
-      test: ["CMD", "true"]  # En simpel kommando, der altid returnerer succes
-      interval: 30s  # Udfør healthcheck hver 30 sekunder
-      retries: 5      # Prøv op til 5 gange
-      start_period: 10s  # Vent 10 sekunder før første healthcheck
-      timeout: 10s    # Timeout på 10 sekunder per healthcheck
-    command: /bin/sh -c "sleep 15 && dotnet bidworker.dll"  # Erstat med den kommando, der starter din applikation
-    restart: on-failure
-
   vault_dev:
     image: hashicorp/vault:latest
     container_name: vault_dev
@@ -117,32 +51,12 @@ services:
     networks:
       - auctionGOnet  
 
-  bidworker:
-    image: soekopaacykel/bidworker:latest  # Udskift med din faktiske Docker image
-    container_name: bidworker
-    environment:
-      - RabbitHost=rabbitmq  # Miljøvariabel for RabbitMQ
-    depends_on:
-      - rabbitmq
-    networks:
-      - auctionGOnet
-    healthcheck:
-      test: ["CMD", "true"]  # En simpel kommando, der altid returnerer succes
-      interval: 30s  # Udfør healthcheck hver 30 sekunder
-      retries: 5      # Prøv op til 5 gange
-      start_period: 10s  # Vent 10 sekunder før første healthcheck
-      timeout: 10s    # Timeout på 10 sekunder per healthcheck
-    command: /bin/sh -c "sleep 15 && dotnet bidworker.dll"  # Erstat med den kommando, der starter din applikation
-    restart: on-failure
-   
-    
-
   rabbitmq:
     image: "rabbitmq:management"
     container_name: rabbitmq
     ports:
-      - "5672:5672"  # RabbitMQ AMQP port
-      - "15672:15672"  # RabbitMQ Management UI port
+      - "5672:5672"  
+      - "15672:15672"  # RabbitMQ  UI port
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
@@ -150,12 +64,33 @@ services:
       - auctionGOnet
     restart: always
 
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    ports:
+      - "3100:3100"
+    networks:
+      - auctionGOnet
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"  # Grafana default port
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - loki
+    networks:
+      - auctionGOnet
+
 volumes:
-  catalog-images:
-    external: false
   vault_data:
+  grafana_data:
 
 networks:
   auctionGOnet:
-    driver: bridge
-    name: auctionGOnet
+    external: false
